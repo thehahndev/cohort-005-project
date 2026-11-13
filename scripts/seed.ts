@@ -72,6 +72,8 @@ async function seed() {
 
   // Drop and recreate tables for a clean seed
   sqlite.exec(`
+    DROP TABLE IF EXISTS bookmarks;
+    DROP TABLE IF EXISTS notes;
     DROP TABLE IF EXISTS comments;
     DROP TABLE IF EXISTS course_ratings;
     DROP TABLE IF EXISTS video_watch_events;
@@ -2068,6 +2070,66 @@ This course is still in draft while the cluster examples are rewritten against t
 
   console.log(`Created ${countRows(schema.lessonProgress)} lesson progress records.`);
 
+  // ─── Bookmarks and Notes ───
+  // Each Student's own, on Lessons they have content access to.
+
+  function bookmark(userId: number, lessonId: number, daysAgoCreated: number) {
+    db.insert(schema.bookmarks)
+      .values({ userId, lessonId, createdAt: daysAgo(daysAgoCreated) })
+      .run();
+  }
+
+  function note(
+    userId: number,
+    lessonId: number,
+    body: string,
+    daysAgoCreated: number,
+    daysAgoEdited: number
+  ) {
+    db.insert(schema.notes)
+      .values({
+        userId,
+        lessonId,
+        body,
+        createdAt: daysAgo(daysAgoCreated),
+        updatedAt: daysAgo(daysAgoEdited),
+      })
+      .run();
+  }
+
+  // Emma — flagged a couple of course 1 Lessons to revisit, and keeps Notes
+  bookmark(students[0].id, course1LessonIds[4], 44);
+  bookmark(students[0].id, course1LessonIds[12], 36);
+  bookmark(students[0].id, course2LessonIds[6], 33);
+  note(
+    students[0].id,
+    course1LessonIds[4],
+    "Rewatch the part about closures.\n- counter example\n- *why* the inner fn keeps the value",
+    44,
+    20
+  );
+  note(
+    students[0].id,
+    course2LessonIds[9],
+    "# Questions\nDoes 304 count as a cache hit?",
+    31,
+    31
+  );
+
+  // Olivia — one Bookmark, one Note
+  bookmark(students[2].id, course1LessonIds[2], 28);
+  note(
+    students[2].id,
+    course1LessonIds[1],
+    "Set up the editor the same way before the next lesson.",
+    29,
+    27
+  );
+
+  console.log(
+    `Created ${countRows(schema.bookmarks)} bookmarks and ${countRows(schema.notes)} notes.`
+  );
+
   // ─── Quiz Attempts ───
 
   // Helper to record a quiz attempt with answers
@@ -2847,6 +2909,9 @@ This course is still in draft while the cluster examples are rewritten against t
   console.log(`  Enrollments: ${countRows(schema.enrollments)}`);
   console.log(`  Course ratings: ${countRows(schema.courseRatings)}`);
   console.log(`  Lesson comments: ${countRows(schema.comments)}`);
+  console.log(
+    `  Bookmarks: ${countRows(schema.bookmarks)}, notes: ${countRows(schema.notes)}`
+  );
   console.log(
     `  Lesson progress: ${countRows(schema.lessonProgress)} (${countRows(schema.lessonProgress, eq(schema.lessonProgress.status, LessonProgressStatus.Completed))} completed)`
   );
