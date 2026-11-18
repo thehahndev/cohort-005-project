@@ -1,30 +1,38 @@
 import {
-  calculateWatchProgress,
-  computeResult,
   createCommentSchema,
   deleteCommentSchema,
   editCommentSchema,
+  INTENT_CAPABILITY,
+  lessonRef,
+  saveNoteSchema,
+} from "~/modules/lesson-viewer/intents.server";
+import {
   flattenCourseLessons,
-  getBestAttempt,
-  getCommentById,
   getCourseWithDetails,
-  getLastWatchPosition,
   getLessonById,
+  getModuleById,
+  getUserById,
+} from "~/modules/lesson-viewer/course.server";
+import {
+  calculateWatchProgress,
+  getLastWatchPosition,
   getLessonProgress,
   getLessonProgressForCourse,
+  markLessonComplete,
+  markLessonInProgress,
+} from "~/modules/lesson-viewer/progress.server";
+import {
+  getCommentById,
   getLessonThread,
-  getModuleById,
+  renderThread,
+} from "~/modules/lesson-viewer/comments.server";
+import {
+  computeResult,
+  getBestAttempt,
   getQuizById,
   getQuizByLessonId,
   getQuizWithQuestions,
-  getUserById,
-  INTENT_CAPABILITY,
-  lessonRef,
-  markLessonComplete,
-  markLessonInProgress,
-  renderThread,
-  saveNoteSchema,
-} from "~/modules/lesson-viewer/index.server";
+} from "~/modules/lesson-viewer/quiz.server";
 import { useAutoplay } from "~/components/lesson-autoplay";
 import { LockedLesson } from "~/components/lesson-locked";
 import { LessonBreadcrumb } from "~/components/lesson-breadcrumb";
