@@ -91,4 +91,24 @@ describe("describeNoteDraft", () => {
     expect(draft.canSave).toBe(false);
     expect(draft.status).toEqual({ kind: "blank" });
   });
+
+  it("judges the trimmed text, as the server stores it", () => {
+    const draft = describeNoteDraft({
+      body: `${saved.body}\n`,
+      saved,
+      maxLength: 2000,
+    });
+    expect(draft.canSave).toBe(false);
+    expect(draft.status).toEqual({ kind: "saved", updatedAt: saved.updatedAt });
+  });
+
+  it("does not count surrounding whitespace against the limit", () => {
+    const draft = describeNoteDraft({
+      body: ` ${"a".repeat(5)}\n`,
+      saved: null,
+      maxLength: 5,
+    });
+    expect(draft.counter).toBe("5 / 5");
+    expect(draft.canSave).toBe(true);
+  });
 });

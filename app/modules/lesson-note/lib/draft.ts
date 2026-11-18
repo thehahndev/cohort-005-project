@@ -11,7 +11,13 @@ export type NoteDraft = {
   status: NoteDraftStatus;
 };
 
-export function describe({
+/**
+ * What the note editor shows for the text in the box right now: the
+ * character counter, whether Save is worth pressing, and the status line.
+ * The server trims a note before checking and storing it, so the draft is
+ * judged on its trimmed text too.
+ */
+export function describeNoteDraft({
   body,
   saved,
   maxLength,
@@ -22,12 +28,13 @@ export function describe({
   maxLength: number;
   error?: string;
 }): NoteDraft {
-  const tooLong = body.length > maxLength;
-  const empty = body.trim().length === 0;
-  const unsaved = body !== saved?.body;
+  const trimmed = body.trim();
+  const tooLong = trimmed.length > maxLength;
+  const empty = trimmed.length === 0;
+  const unsaved = trimmed !== saved?.body;
 
   return {
-    counter: `${body.length.toLocaleString("en")} / ${maxLength.toLocaleString("en")}`,
+    counter: `${trimmed.length.toLocaleString("en")} / ${maxLength.toLocaleString("en")}`,
     canSave: unsaved && !empty && !tooLong,
     status: statusOf({ error, tooLong, unsaved, empty, saved }),
   };
