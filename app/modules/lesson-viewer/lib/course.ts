@@ -31,10 +31,14 @@ export function getCourseWithDetails(id: number) {
 
   if (!course) return null;
 
+  return { ...course, modules: getModulesWithLessons(id) };
+}
+
+function getModulesWithLessons(courseId: number) {
   const courseModules = db
     .select()
     .from(modules)
-    .where(eq(modules.courseId, id))
+    .where(eq(modules.courseId, courseId))
     .orderBy(modules.position)
     .all();
 
@@ -50,13 +54,10 @@ export function getCourseWithDetails(id: number) {
           .all()
       : [];
 
-  return {
-    ...course,
-    modules: courseModules.map((mod) => ({
-      ...mod,
-      lessons: courseLessons.filter((l) => l.moduleId === mod.id),
-    })),
-  };
+  return courseModules.map((mod) => ({
+    ...mod,
+    lessons: courseLessons.filter((l) => l.moduleId === mod.id),
+  }));
 }
 
 export function getLessonById(id: number) {

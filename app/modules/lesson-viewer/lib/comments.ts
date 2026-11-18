@@ -32,26 +32,9 @@ export function getLessonThread(lessonId: number): ThreadComment[] {
   const course = getCourseForLesson(lessonId);
   if (!course) return [];
 
-  const rows = db
-    .select({
-      id: comments.id,
-      body: comments.body,
-      parentId: comments.parentId,
-      createdAt: comments.createdAt,
-      editedAt: comments.editedAt,
-      deletedAt: comments.deletedAt,
-      authorId: users.id,
-      authorName: users.name,
-      authorAvatarUrl: users.avatarUrl,
-      authorRole: users.role,
-    })
-    .from(comments)
-    .innerJoin(users, eq(comments.userId, users.id))
-    .where(eq(comments.lessonId, lessonId))
-    .orderBy(asc(comments.createdAt), asc(comments.id))
-    .all();
+  const rows = getThreadRows(lessonId);
 
-  const toThreadComment = (row: (typeof rows)[number]): ThreadComment => {
+  const toThreadComment = (row: ThreadRow): ThreadComment => {
     const deleted = row.deletedAt !== null;
     return {
       id: row.id,
@@ -104,4 +87,27 @@ export async function renderThread(
       replies: await renderThread(node.replies),
     }))
   );
+}
+
+type ThreadRow = ReturnType<typeof getThreadRows>[number];
+
+function getThreadRows(lessonId: number) {
+  return db
+    .select({
+      id: comments.id,
+      body: comments.body,
+      parentId: comments.parentId,
+      createdAt: comments.createdAt,
+      editedAt: comments.editedAt,
+      deletedAt: comments.deletedAt,
+      authorId: users.id,
+      authorName: users.name,
+      authorAvatarUrl: users.avatarUrl,
+      authorRole: users.role,
+    })
+    .from(comments)
+    .innerJoin(users, eq(comments.userId, users.id))
+    .where(eq(comments.lessonId, lessonId))
+    .orderBy(asc(comments.createdAt), asc(comments.id))
+    .all();
 }
