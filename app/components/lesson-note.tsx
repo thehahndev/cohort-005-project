@@ -20,12 +20,15 @@ export function LessonNote({
 }) {
   const fetcher = useFetcher<{ ok: boolean; error?: string }>();
   const [body, setBody] = useState(note?.body ?? "");
+  // The server's error is about the text that was sent; once the learner
+  // edits it, the error no longer describes what is in the box.
+  const [submittedBody, setSubmittedBody] = useState<string | null>(null);
   const isSaving = fetcher.state !== "idle";
   const draft = describeNoteDraft({
     body,
     saved: note,
     maxLength: MAX_NOTE_LENGTH,
-    error: isSaving ? undefined : fetcher.data?.error,
+    error: isSaving || body !== submittedBody ? undefined : fetcher.data?.error,
   });
 
   return (
@@ -33,7 +36,11 @@ export function LessonNote({
       <CardContent className="p-6">
         <NoteHeader />
 
-        <fetcher.Form method="post" className="space-y-2">
+        <fetcher.Form
+          method="post"
+          className="space-y-2"
+          onSubmit={() => setSubmittedBody(body)}
+        >
           <input type="hidden" name="intent" value="save-note" />
           <Textarea
             name="body"
@@ -42,6 +49,7 @@ export function LessonNote({
             rows={4}
             placeholder="Jot down what you want to remember from this lesson..."
             aria-label="Your notes"
+            aria-describedby="lesson-note-status lesson-note-counter"
             className="min-h-24 resize-y"
           />
 
@@ -64,8 +72,11 @@ function NoteFooter({
       <Button type="submit" size="sm" disabled={isSaving || !draft.canSave}>
         {isSaving ? "Saving..." : "Save note"}
       </Button>
-      <NoteStatus status={draft.status} />
+      <output id="lesson-note-status" aria-live="polite">
+        <NoteStatus status={draft.status} />
+      </output>
       <span
+        id="lesson-note-counter"
         className={cn(
           "ml-auto text-xs",
           draft.status.kind === "too-long"
@@ -95,7 +106,7 @@ function NoteHeader() {
 function NoteStatus({ status }: { status: NoteDraftStatus }) {
   switch (status.kind) {
     case "error":
-      return <span className="text-sm text-destructive">{status.message}</span>;
+      return <span className="text-xs text-destructive">{status.message}</span>;
     case "too-long":
       return (
         <span className="text-xs text-destructive">
